@@ -8,17 +8,17 @@ import (
 	"strings"
 )
 
-//trouvé le nombre de fourmis
-func NombreDefourmis(data []string) (int, []string) { //je parse les lignes stocker dans le tableau data
-	var nbrFourmis int
+// trouvé le nombre de Ants
+func NombreDeAnts(data []string) (int, []string) { // je parse les lignes stocker dans le tableau data
+	var nbrAnts int
 	var roomData []string
 	var err error
 
 	for i := 0; i < len(data); i++ {
 		if data[i][0] != '#' {
-			nbrFourmis, err = strconv.Atoi(data[i])
-			if nbrFourmis < 1 {
-				err = errors.New("EROOR:pas assez de fourmis")
+			nbrAnts, err = strconv.Atoi(data[i])
+			if nbrAnts < 1 {
+				err = errors.New("EROOR:pas assez de Ants")
 			}
 			ErrorCheck(err)
 			roomData = data[i+1:]
@@ -26,15 +26,14 @@ func NombreDefourmis(data []string) (int, []string) { //je parse les lignes stoc
 		}
 	}
 
-	return nbrFourmis, roomData //je renvois le nbr de fourmis,le restant de mon []data
+	return nbrAnts, roomData // je renvois le nbr de Ants,le restant de mon []data
 }
 
 // split les lignes restante en room et en relation
 func SeparData(roomData []string) ([]string, []string) {
-
 	var dataEmplace []string
 
-	//sparé les coordonées de la room
+	// sparé les coordonées de la room
 	for i := 0; i < len(roomData); i++ {
 		if len(strings.Split(roomData[i], " ")) == 3 {
 			dataEmplace = append(dataEmplace, roomData[i])
@@ -48,14 +47,13 @@ func SeparData(roomData []string) ([]string, []string) {
 		}
 	}
 
-	//les relations entre les rooms
+	// les relations entre les rooms
 	var realationData []string
 
 	for _, v := range roomData {
 		if len(strings.Split(v, "-")) == 2 {
 			realationData = append(realationData, v)
 		} else if v[0] == '#' && v[1] != '#' {
-
 		} else {
 			var err error = nil
 			err = errors.New("ERROR:invalid data format")
@@ -66,12 +64,12 @@ func SeparData(roomData []string) ([]string, []string) {
 	return dataEmplace, realationData
 }
 
-//la Map des room et leurs coordonnées
+// la Map des room et leurs coordonnées
 func CoordoneMapRoom(lignes []string) map[string][]int {
 	roomMap := make(map[string][]int)
 	var err error
 
-	//check pour la room ##start et ##end emplacement
+	// check pour la room ##start et ##end emplacement
 	var startPoint int
 	var endPoint int
 	var startPointer *int
@@ -86,13 +84,13 @@ func CoordoneMapRoom(lignes []string) map[string][]int {
 			endPointer = &endPoint
 		}
 	}
-	//si l'une des lignes ##start ou ##end n'existe pas, affiche error
+	// si l'une des lignes ##start ou ##end n'existe pas, affiche error
 	if startPointer == nil || endPointer == nil {
 		err = errors.New("ERROR:il manque la room start ou la room end")
 		ErrorCheck(err)
 	}
 
-	//met chaque emplacement et ses coordonnées dans la roomMap
+	// met chaque emplacement et ses coordonnées dans la roomMap
 
 	for i := 0; i < len(lignes); i++ {
 		room := strings.Split(lignes[i], " ")
@@ -111,7 +109,7 @@ func CoordoneMapRoom(lignes []string) map[string][]int {
 		}
 	}
 
-	//vérification des salles avec les meme coordonnées
+	// vérification des salles avec les meme coordonnées
 	for key1, v1 := range roomMap {
 		for key2, v2 := range roomMap {
 			if key1 == key2 {
@@ -126,7 +124,7 @@ func CoordoneMapRoom(lignes []string) map[string][]int {
 	return roomMap
 }
 
-//la map des connexions entre les pièces
+// la map des connexions entre les pièces
 func MapRoomConnections(dataBrute []string, coordoneMap map[string][]int) map[string][]string {
 	var err error
 	originalMap := make(map[string][]string)
@@ -142,7 +140,7 @@ func MapRoomConnections(dataBrute []string, coordoneMap map[string][]int) map[st
 		}
 	}
 
-	//ajouter les relations a la map
+	// ajouter les relations a la map
 	for _, v := range dataBrute {
 		connection := strings.Split(v, "-")
 		if originalMap[connection[0]] != nil && originalMap[connection[1]] != nil {
@@ -156,7 +154,7 @@ func MapRoomConnections(dataBrute []string, coordoneMap map[string][]int) map[st
 	return originalMap
 }
 
-//supprimé les chemains sans issus
+// supprimé les chemains sans issus
 func SupprSsissu(mapDepart map[string][]string) map[string][]string {
 	var err error
 
@@ -185,12 +183,12 @@ func SupprSsissu(mapDepart map[string][]string) map[string][]string {
 	return mapDepart
 }
 
-//remove supprime une valeur nommée de la string
+// remove supprime une valeur nommée de la string
 func Remove(slice []string, s int) []string {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-//Return  error si err!=nil
+// Return  error si err!=nil
 func ErrorCheck(e error) {
 	if e != nil {
 		fmt.Println("ERROR:invalid data format")

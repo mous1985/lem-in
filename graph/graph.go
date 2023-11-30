@@ -1,10 +1,12 @@
 package graph
 
-var Fourmiliere = make(map[string][]string)
-var Parcours [][]string
+var (
+	Fourmiliere = make(map[string][]string)
+	Parcours    [][]string
+)
 
 // Parcour prend la Fourmiliere et le nombre de Fourmis et retourne tous les chemins possibles de la Fourmiliere jusqu'à la fin,
-//avec la distribution optimale de Fourmis sur chaque chemin.
+// avec la distribution optimale de Fourmis sur chaque chemin.
 func Parcour(data map[string][]string, Fourmis int) ([][]string, []int) {
 	Fourmiliere = data
 
@@ -80,7 +82,7 @@ func filter(endroom string, Fourmis int) ([][]string, []int) {
 	tempParcour = append(tempParcour, Parcours...)
 
 	// l'étiquette `boucleExtest` utilisée pour marquer la boucle externe,
-	//qui parcourt les chemins disponibles pour trouver le chemin le plus court.
+	// qui parcourt les chemins disponibles pour trouver le chemin le plus court.
 boucleExt:
 	for _, cheminCourt := range Parcours {
 
@@ -150,9 +152,8 @@ func strcutureParcours(milieu1 []string, Chemin [][]string, tempParcour [][]stri
 	return Chemin
 }
 
-//la fonction formule calcule la distribution optimale de Fourmis le long de différents Chemins dans  la fourmiliere
+// la fonction formule calcule la distribution optimale de Fourmis le long de différents Chemins dans  la fourmiliere
 func formule(endroom string, option [][]string, Fourmis int) ([][]string, []int, int) {
-
 	fourmiArrive, distribution := moveFourmis(option)
 	moves := len(option[len(option)-1]) - 1
 
@@ -197,8 +198,10 @@ func formule(endroom string, option [][]string, Fourmis int) ([][]string, []int,
 	return option, distribution, moves
 }
 
-/*moveFourmis prend un Chemin donné et renvoie la quantité de base de Fourmis qui se terminent
-et comment ces fourmis sont réparties sur chaque chemin.*/
+/*
+moveFourmis prend un Chemin donné et renvoie la quantité de base de Fourmis qui se terminent
+et comment ces fourmis sont réparties sur chaque chemin.
+*/
 func moveFourmis(Chemin [][]string) (int, []int) {
 	if len(Chemin) == 1 {
 		return 1, []int{1}
@@ -245,5 +248,4 @@ func decompte(option [][]string, Fourmis int, fourmiArrive int, distribution []i
 		}
 	}
 	return option, distribution, moves
-
 }

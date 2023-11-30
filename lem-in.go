@@ -10,13 +10,11 @@ import (
 )
 
 func main() {
-
 	if len(os.Args) != 2 {
 		fmt.Println("ERROR:nombre d'argument incorrecte! ")
-
 	}
 
-	//ouvre le fichier spécifié dans le premier argument et lit son contenu
+	// ouvre le fichier spécifié dans le premier argument et lit son contenu
 	fileName := "./examples/" + os.Args[1]
 	input, err := os.ReadFile(fileName)
 	functions.ErrorCheck(err)
@@ -29,53 +27,53 @@ func main() {
 		}
 	}
 
-	//récupere nombre de fourmis
-	nbrFourmis, roomData := functions.NombreDefourmis(data)
+	// récupere nombre de Ant
+	nbrAnts, roomData := functions.NombreDeAnts(data)
 
-	//séparé les data a partir des coordonées des salles et les relation entre elles
+	// séparé les data a partir des coordonées des salles et les relation entre elles
 	dataEmplace, dataRelation := functions.SeparData(roomData)
 	coordoneMap := functions.CoordoneMapRoom(dataEmplace)
 	originalMap := functions.MapRoomConnections(dataRelation, coordoneMap)
 	finaleMap := functions.SupprSsissu(originalMap)
 
-	//calculer le chemin optimal pour les fourmis
-	path, distribution := graph.Parcour(finaleMap, nbrFourmis)
+	// calculer le chemin optimal pour les Ants
+	path, distribution := graph.Parcour(finaleMap, nbrAnts)
 
 	fmt.Println(string(input) + "\n")
 
-	var fourmis [][]int
-	antNr := 1
-	// Création d'une slice dans la variable fourmis[][] qui contient des entiers représentant le nombre de fourmis
+	var Ants [][]int
+	AntsNr := 1
+	// Création d'une slice dans la variable Ants[][] qui contient des entiers représentAnts le nombre de Ants
 	for i := 0; i < len(distribution); i++ {
-		fourmis = append(fourmis, []int{})
+		Ants = append(Ants, []int{})
 
 		for j := 0; j < distribution[i]; j++ {
-			fourmis[i] = append(fourmis[i], antNr)
-			antNr++
+			Ants[i] = append(Ants[i], AntsNr)
+			AntsNr++
 		}
 	}
-	maxAnt := 0
-	//Affectation de la plus grande valeur de la variable fourmis à la variable maxAnt
-	for i := 0; i < len(fourmis); i++ {
-		if len(fourmis[i]) > maxAnt {
-			maxAnt = len(fourmis[i])
+	maxAnts := 0
+	// Affectation de la plus grande valeur de la variable Ants à la variable maxAnts
+	for i := 0; i < len(Ants); i++ {
+		if len(Ants[i]) > maxAnts {
+			maxAnts = len(Ants[i])
 		}
 	}
 
 	connecter := false
-	restante := nbrFourmis
-	//Création d'une boucle infinie qui imprime le output  et se termine lorsque  la variable restante est égal à 0
+	restante := nbrAnts
+	// Création d'une boucle infinie qui imprime le output  et se termine lorsque  la variable restAntse est égal à 0
 	for i := 1; i > 0; i++ {
-		Lafourmis := 0
-		for k := 0; k < maxAnt; k++ {
-			for j := 0; j < len(fourmis); j++ {
-				if (len(fourmis[j]) > Lafourmis) && (len(path[j]) > i-Lafourmis) && (i-Lafourmis > 0) {
+		LaAnts := 0
+		for k := 0; k < maxAnts; k++ {
+			for j := 0; j < len(Ants); j++ {
+				if (len(Ants[j]) > LaAnts) && (len(path[j]) > i-LaAnts) && (i-LaAnts > 0) {
 					fmt.Print("L")
-					fmt.Print(fourmis[j][Lafourmis])
+					fmt.Print(Ants[j][LaAnts])
 					fmt.Print("-")
-					fmt.Print(path[j][i-Lafourmis])
+					fmt.Print(path[j][i-LaAnts])
 					fmt.Print(" ")
-					if i-Lafourmis == len(path[j])-1 {
+					if i-LaAnts == len(path[j])-1 {
 						restante--
 					}
 					if len(path[j]) == 2 {
@@ -84,9 +82,8 @@ func main() {
 						connecter = false
 					}
 				}
-
 			}
-			Lafourmis++
+			LaAnts++
 		}
 		if !connecter {
 			fmt.Println()
