@@ -8,28 +8,30 @@ import (
 	"strings"
 )
 
-// trouvé le nombre de Ants
-func NombreDeAnts(data []string) (int, []string) { // je parse les lignes stocker dans le tableau data
-	var nbrAnts int
-	var roomData []string
-	var err error
+// NbrOfAntsInRoom find the number of ants in the room
+// and return the number of ants and the data of the room
+func NbrOfAntsInRoom(data []string) (int, []string) {
+	var (
+		nbrAnts  int
+		dataRoom []string
+		err      error
+	)
 
 	for i := 0; i < len(data); i++ {
 		if data[i][0] != '#' {
 			nbrAnts, err = strconv.Atoi(data[i])
 			if nbrAnts < 1 {
-				err = errors.New("EROOR:pas assez de Ants")
+				err = errors.New("EROOR:Not enough ants")
 			}
 			ErrorCheck(err)
-			roomData = data[i+1:]
+			dataRoom = data[i+1:]
 			break
 		}
 	}
 
-	return nbrAnts, roomData // je renvois le nbr de Ants,le restant de mon []data
+	return nbrAnts, dataRoom
 }
 
-// split les lignes restante en room et en relation
 func SeparData(roomData []string) ([]string, []string) {
 	var dataEmplace []string
 

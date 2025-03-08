@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// récupere nombre de Ant
-	nbrAnts, roomData := functions.NombreDeAnts(data)
+	nbrAnts, roomData := functions.NbrOfAntsInRoom(data)
 
 	// séparé les data a partir des coordonées des salles et les relation entre elles
 	dataEmplace, dataRelation := functions.SeparData(roomData)

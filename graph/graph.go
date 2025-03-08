@@ -1,16 +1,16 @@
 package graph
 
 var (
-	Fourmiliere = make(map[string][]string)
-	Parcours    [][]string
+	AntsFarm = make(map[string][]string)
+	Parcours [][]string
 )
 
-// Parcour prend la Fourmiliere et le nombre de Fourmis et retourne tous les chemins possibles de la Fourmiliere jusqu'à la fin,
+// Parcour prend la AntsFarm et le nombre de Fourmis et retourne tous les chemins possibles de la AntsFarm jusqu'à la fin,
 // avec la distribution optimale de Fourmis sur chaque chemin.
 func Parcour(data map[string][]string, Fourmis int) ([][]string, []int) {
-	Fourmiliere = data
+	AntsFarm = data
 
-	for start, options := range Fourmiliere {
+	for start, options := range AntsFarm {
 		if options[0] == "start" {
 			cheminPossible([]string{start})
 			break
@@ -20,7 +20,7 @@ func Parcour(data map[string][]string, Fourmis int) ([][]string, []int) {
 	var Chemin [][]string
 	var distribution []int
 
-	for end, options := range Fourmiliere {
+	for end, options := range AntsFarm {
 		if options[0] == "end" {
 			Chemin, distribution = filter(end, Fourmis)
 		}
@@ -29,9 +29,9 @@ func Parcour(data map[string][]string, Fourmis int) ([][]string, []int) {
 	return Chemin, distribution
 }
 
-// cheminPossible prend la Fourmiliere et nous donne tous les chemins possibles jusqu'à la fin.
+// cheminPossible prend la AntsFarm et nous donne tous les chemins possibles jusqu'à la fin.
 func cheminPossible(Chemin []string) {
-	options := Fourmiliere[Chemin[len(Chemin)-1]]
+	options := AntsFarm[Chemin[len(Chemin)-1]]
 
 	// si on est a la fin ajoute le chemain a Parcours
 	if options[0] == "end" {
@@ -48,9 +48,7 @@ func cheminPossible(Chemin []string) {
 			}
 			newParcour := append(Chemin, options[i])
 			test := make([]string, len(newParcour))
-			for i := 0; i < len(newParcour); i++ {
-				test[i] = newParcour[i]
-			}
+			copy(test, newParcour)
 			cheminPossible(test)
 
 		}
@@ -97,9 +95,9 @@ boucleExt:
 			}
 		}
 		if move < 1 {
-			leChemin, laBonneDistribution, move = formule(endroom, Chemin, Fourmis)
+			leChemin, laBonneDistribution, move = formule(Chemin, Fourmis)
 		} else {
-			newChemin, newDistribution, newMoves := formule(endroom, Chemin, Fourmis)
+			newChemin, newDistribution, newMoves := formule(Chemin, Fourmis)
 			if newMoves < move {
 				laBonneDistribution, move, leChemin = newDistribution, newMoves, newChemin
 			}
@@ -152,8 +150,8 @@ func strcutureParcours(milieu1 []string, Chemin [][]string, tempParcour [][]stri
 	return Chemin
 }
 
-// la fonction formule calcule la distribution optimale de Fourmis le long de différents Chemins dans  la fourmiliere
-func formule(endroom string, option [][]string, Fourmis int) ([][]string, []int, int) {
+// la fonction formule calcule la distribution optimale de Fourmis le long de différents Chemins dans  la AntsFarm
+func formule(option [][]string, Fourmis int) ([][]string, []int, int) {
 	fourmiArrive, distribution := moveFourmis(option)
 	moves := len(option[len(option)-1]) - 1
 
