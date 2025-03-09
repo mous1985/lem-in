@@ -64,8 +64,7 @@ func contains(slice []string, item string) bool {
 }
 
 /*
-	filterPaths sorts the found paths to select the best path based on certain criteria
-
+filterPaths sorts the found paths to select the best path based on certain criteria
 and returns this path along with the distribution of ants
 */
 func filterPaths(endRoom string, ants int) ([][]string, []int) {
@@ -112,8 +111,7 @@ func allPathsEndAt(paths [][]string, endRoom string) bool {
 }
 
 /*
-	structurePaths compares each path to middle1. If a path contains a room that is also present in middle1,
-
+structurePaths compares each path to middle1. If a path contains a room that is also present in middle1,
 the comparison is interrupted and the loop continues with the next path.
 If no path contains a room that is also present in middle1,
 the path is added to paths and the rooms from middle2 are added to middle1.
