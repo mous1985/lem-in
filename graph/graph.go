@@ -2,248 +2,228 @@ package graph
 
 var (
 	AntsFarm = make(map[string][]string)
-	Parcours [][]string
+	Paths    [][]string
 )
 
-// Parcour prend la AntsFarm et le nombre de Fourmis et retourne tous les chemins possibles de la AntsFarm jusqu'à la fin,
-// avec la distribution optimale de Fourmis sur chaque chemin.
-func Parcour(data map[string][]string, Fourmis int) ([][]string, []int) {
+// FindPaths takes the AntsFarm and the number of ants and returns all possible paths from the AntsFarm to the end,
+// with the optimal distribution of ants on each path.
+func FindPaths(data map[string][]string, ants int) ([][]string, []int) {
 	AntsFarm = data
 
 	for start, options := range AntsFarm {
 		if options[0] == "start" {
-			cheminPossible([]string{start})
+			findPossiblePaths([]string{start})
 			break
 		}
 	}
 
-	var Chemin [][]string
+	var paths [][]string
 	var distribution []int
 
 	for end, options := range AntsFarm {
 		if options[0] == "end" {
-			Chemin, distribution = filter(end, Fourmis)
+			paths, distribution = filterPaths(end, ants)
 		}
 	}
 
-	return Chemin, distribution
+	return paths, distribution
 }
 
-// cheminPossible prend la AntsFarm et nous donne tous les chemins possibles jusqu'à la fin.
-func cheminPossible(Chemin []string) {
-	options := AntsFarm[Chemin[len(Chemin)-1]]
+// findPossiblePaths takes the AntsFarm and gives us all possible paths to the end.
+func findPossiblePaths(path []string) {
+	options := AntsFarm[path[len(path)-1]]
 
-	// si on est a la fin ajoute le chemain a Parcours
+	// if we are at the end, add the path to Paths
 	if options[0] == "end" {
-		Parcours = append(Parcours, Chemin)
-	} else {
-		// essaye de trouver la room que nous n'avons pas encore parcourue
-	boucleExt:
-		for i := 1; i < len(options); i++ {
+		Paths = append(Paths, path)
+		return
+	}
 
-			for _, oldRoom := range Chemin {
-				if oldRoom == options[i] {
-					continue boucleExt
-				}
-			}
-			newParcour := append(Chemin, options[i])
-			test := make([]string, len(newParcour))
-			copy(test, newParcour)
-			cheminPossible(test)
-
+	// try to find the room that we haven't visited yet
+	for _, option := range options[1:] {
+		if !contains(path, option) {
+			newPath := append(path, option)
+			findPossiblePaths(newPath)
 		}
 	}
 }
 
-/* filter trie les chemins trouvés pour sélectionner le bon chemin en fonction de certains critères
-et retourner ce chemin ainsi que la distribution des fourmis */
-
-func filter(endroom string, Fourmis int) ([][]string, []int) {
-	var leChemin [][]string
-	var laBonneDistribution []int
-	var move int
-
-	if len(Parcours) == 1 {
-		return Parcours, []int{Fourmis}
-	}
-
-	for i := 1; i < len(Parcours); i++ {
-		if i < 1 {
-			continue
-		} else if len(Parcours[i]) < len(Parcours[i-1]) {
-			Parcours[i], Parcours[i-1] = Parcours[i-1], Parcours[i]
-			i -= 2
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
 		}
 	}
-
-	var tempParcour [][]string
-	tempParcour = append(tempParcour, Parcours...)
-
-	// l'étiquette `boucleExtest` utilisée pour marquer la boucle externe,
-	// qui parcourt les chemins disponibles pour trouver le chemin le plus court.
-boucleExt:
-	for _, cheminCourt := range Parcours {
-
-		if len(cheminCourt) == 2 {
-			return [][]string{cheminCourt}, []int{Fourmis}
-		}
-
-		Chemin := strcutureParcours(cheminCourt[1:len(cheminCourt)-1], [][]string{cheminCourt}, tempParcour)
-		for _, arr := range Chemin {
-			if arr[len(arr)-1] != endroom {
-				continue boucleExt
-			}
-		}
-		if move < 1 {
-			leChemin, laBonneDistribution, move = formule(Chemin, Fourmis)
-		} else {
-			newChemin, newDistribution, newMoves := formule(Chemin, Fourmis)
-			if newMoves < move {
-				laBonneDistribution, move, leChemin = newDistribution, newMoves, newChemin
-			}
-		}
-	}
-
-	return leChemin, laBonneDistribution
-}
-
-/* strcutureParcours compare chaque parcours à milieu1. Si un parcours contient une pièce qui est également présente dans milieu1,
-la comparaison est interrompue et la boucle continue avec le parcours suivant.
-Si aucun parcours ne contient de pièce qui est également présente dans milieu1,
-le parcours est ajouté à Chemin et les pièces de milieu2 sont ajoutées à milieu1.*/
-
-func strcutureParcours(milieu1 []string, Chemin [][]string, tempParcour [][]string) [][]string {
-	var stoppeur bool
-	for _, long := range tempParcour {
-		milieu2 := long[1 : len(long)-1]
-
-		for i, room1 := range milieu1 {
-			for _, room2 := range milieu2 {
-				if room2 == room1 {
-					stoppeur = true
-					break
-				}
-			}
-			if stoppeur {
-				stoppeur = false
-				break
-			}
-
-			if i == len(milieu1)-1 {
-				Chemin = append(Chemin, long)
-				mid := make([]string, len(milieu1)+len(milieu2))
-				i := 0
-				for i < len(milieu1) {
-					mid[i] = milieu1[i]
-					i++
-				}
-
-				for j := 0; j < len(milieu2); j++ {
-					mid[i] = milieu2[j]
-					i++
-				}
-
-				milieu1 = mid
-			}
-		}
-	}
-	return Chemin
-}
-
-// la fonction formule calcule la distribution optimale de Fourmis le long de différents Chemins dans  la AntsFarm
-func formule(option [][]string, Fourmis int) ([][]string, []int, int) {
-	fourmiArrive, distribution := moveFourmis(option)
-	moves := len(option[len(option)-1]) - 1
-
-	for _, arr := range option {
-		if len(arr)-1 > moves {
-			moves = len(arr) - 1
-		}
-	}
-
-	if fourmiArrive > Fourmis {
-		return decompte(option, Fourmis, fourmiArrive, distribution, moves)
-	} else if fourmiArrive == Fourmis {
-		return option, distribution, moves
-	}
-
-	Fourmis = Fourmis - fourmiArrive
-	base := make([]int, len(distribution))
-	copy(base, distribution)
-
-	if len(distribution) == 1 {
-		distribution[0] += Fourmis
-		moves += Fourmis
-	} else {
-		for i := 0; i < len(distribution); i++ {
-			if i == 0 {
-				moves++
-			}
-			distribution[i]++
-			Fourmis--
-			if Fourmis == 0 {
-				break
-			}
-
-			if Fourmis > 0 && i == len(distribution)-1 {
-				i = -1
-			} else if Fourmis == 0 {
-				break
-			}
-		}
-	}
-
-	return option, distribution, moves
+	return false
 }
 
 /*
-moveFourmis prend un Chemin donné et renvoie la quantité de base de Fourmis qui se terminent
-et comment ces fourmis sont réparties sur chaque chemin.
+	filterPaths sorts the found paths to select the best path based on certain criteria
+
+and returns this path along with the distribution of ants
 */
-func moveFourmis(Chemin [][]string) (int, []int) {
-	if len(Chemin) == 1 {
+func filterPaths(endRoom string, ants int) ([][]string, []int) {
+	if len(Paths) == 1 {
+		return Paths, []int{ants}
+	}
+
+	sortPathsByLength(Paths)
+
+	var bestPaths [][]string
+	var bestDistribution []int
+	var minMoves int
+
+	for _, shortPath := range Paths {
+		if len(shortPath) == 2 {
+			return [][]string{shortPath}, []int{ants}
+		}
+
+		paths := structurePaths(shortPath[1:len(shortPath)-1], [][]string{shortPath}, Paths)
+		if allPathsEndAt(paths, endRoom) {
+			if minMoves == 0 {
+				bestPaths, bestDistribution, minMoves = calculateDistribution(paths, ants)
+			} else {
+				newPaths, newDistribution, newMoves := calculateDistribution(paths, ants)
+				if newMoves < minMoves {
+					bestPaths, bestDistribution, minMoves = newPaths, newDistribution, newMoves
+				}
+			}
+		}
+	}
+
+	return bestPaths, bestDistribution
+}
+
+func sortPathsByLength(paths [][]string) {
+	for i := 1; i < len(paths); i++ {
+		for j := i; j > 0 && len(paths[j]) < len(paths[j-1]); j-- {
+			paths[j], paths[j-1] = paths[j-1], paths[j]
+		}
+	}
+}
+
+func allPathsEndAt(paths [][]string, endRoom string) bool {
+	for _, path := range paths {
+		if path[len(path)-1] != endRoom {
+			return false
+		}
+	}
+	return true
+}
+
+/*
+	structurePaths compares each path to middle1. If a path contains a room that is also present in middle1,
+
+the comparison is interrupted and the loop continues with the next path.
+If no path contains a room that is also present in middle1,
+the path is added to paths and the rooms from middle2 are added to middle1.
+*/
+func structurePaths(middle1 []string, paths [][]string, tempPaths [][]string) [][]string {
+	for _, long := range tempPaths {
+		middle2 := long[1 : len(long)-1]
+
+		if !containsAny(middle1, middle2) {
+			paths = append(paths, long)
+			middle1 = append(middle1, middle2...)
+		}
+	}
+	return paths
+}
+
+func containsAny(slice1, slice2 []string) bool {
+	for _, item1 := range slice1 {
+		for _, item2 := range slice2 {
+			if item1 == item2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// calculateDistribution calculates the optimal distribution of ants along different paths in the AntsFarm
+func calculateDistribution(paths [][]string, ants int) ([][]string, []int, int) {
+	antsArrived, distribution := moveAnts(paths)
+	moves := len(paths[len(paths)-1]) - 1
+
+	for _, path := range paths {
+		if len(path)-1 > moves {
+			moves = len(path) - 1
+		}
+	}
+
+	if antsArrived > ants {
+		return recount(paths, ants, antsArrived, distribution, moves)
+	} else if antsArrived == ants {
+		return paths, distribution, moves
+	}
+
+	ants -= antsArrived
+
+	if len(distribution) == 1 {
+		distribution[0] += ants
+		moves += ants
+	} else {
+		for i := 0; ants > 0; i = (i + 1) % len(distribution) {
+			distribution[i]++
+			ants--
+			if i == 0 {
+				moves++
+			}
+		}
+	}
+
+	return paths, distribution, moves
+}
+
+/*
+moveAnts takes a given path and returns the base amount of ants that finish
+and how these ants are distributed on each path.
+*/
+func moveAnts(paths [][]string) (int, []int) {
+	if len(paths) == 1 {
 		return 1, []int{1}
 	}
 
 	var distribution []int
-	var fourmiArriver int
-	longParcour := len(Chemin[len(Chemin)-1])
+	var antsArrived int
+	longestPath := len(paths[len(paths)-1])
 
-	for _, arr := range Chemin {
-		if len(arr) > longParcour {
-			longParcour = len(arr)
+	for _, path := range paths {
+		if len(path) > longestPath {
+			longestPath = len(path)
 		}
 	}
 
-	for i := range Chemin {
-		fourmiArriver += longParcour - len(Chemin[i]) + 1
-		distribution = append(distribution, longParcour-len(Chemin[i])+1)
+	for _, path := range paths {
+		antsArrived += longestPath - len(path) + 1
+		distribution = append(distribution, longestPath-len(path)+1)
 	}
 
-	return fourmiArriver, distribution
+	return antsArrived, distribution
 }
 
-func decompte(option [][]string, Fourmis int, fourmiArrive int, distribution []int, moves int) ([][]string, []int, int) {
-	for i := len(distribution) - 1; i > -1; i-- {
-		distribution[i] -= 1
-		fourmiArrive--
+func recount(paths [][]string, ants int, antsArrived int, distribution []int, moves int) ([][]string, []int, int) {
+	for i := len(distribution) - 1; i >= 0; i-- {
+		distribution[i]--
+		antsArrived--
 
 		if distribution[i] == 0 {
-			tempDis, tempChemin := distribution[:i], option[:i]
-			tempDis, tempChemin = append(tempDis, distribution[i+1:]...), append(tempChemin, option[i+1:]...)
-			distribution, option = tempDis, tempChemin
-			i--
+			distribution = append(distribution[:i], distribution[i+1:]...)
+			paths = append(paths[:i], paths[i+1:]...)
 		}
-		if fourmiArrive == Fourmis {
+
+		if antsArrived == ants {
 			if i == 0 {
 				moves--
 			}
-			return option, distribution, moves
+			return paths, distribution, moves
 		}
+
 		if i == 0 {
 			moves--
-			i = len(distribution) - 1
+			i = len(distribution)
 		}
 	}
-	return option, distribution, moves
+	return paths, distribution, moves
 }

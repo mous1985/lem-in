@@ -8,48 +8,48 @@ import (
 	"strings"
 )
 
-// NbrOfAntsInRoom finds the number of ants in the room
+// GetNumberOfAnts finds the number of ants in the room
 // and returns the number of ants and the data of the room
-func NbrOfAntsInRoom(data []string) (int, []string) {
+func GetNumberOfAnts(data []string) (int, []string) {
 	for i, line := range data {
 		if line[0] != '#' {
 			nbrAnts, err := strconv.Atoi(line)
 			if err != nil || nbrAnts < 1 {
-				ErrorCheck(errors.New("ERROR: Invalid number of ants"))
+				CheckError(errors.New("ERROR: Invalid number of ants"))
 			}
 			return nbrAnts, data[i+1:]
 		}
 	}
-	ErrorCheck(errors.New("ERROR: No valid number of ants found"))
+	CheckError(errors.New("ERROR: No valid number of ants found"))
 	return 0, nil
 }
 
-// SeparData separates room data into two categories: room information and relationships.
-func SeparData(roomData []string) ([]string, []string) {
-	var dataEmplace, relationData []string
+// SeparateRoomData separates room data into two categories: room information and relationships.
+func SeparateRoomData(roomData []string) ([]string, []string) {
+	var roomInfo, relationData []string
 
 	for _, line := range roomData {
 		if len(strings.Fields(line)) == 3 || strings.HasPrefix(line, "##") {
-			dataEmplace = append(dataEmplace, line)
+			roomInfo = append(roomInfo, line)
 		} else if line[0] == '#' {
 			continue
 		} else if strings.Count(line, "-") == 1 {
 			relationData = append(relationData, line)
 		} else {
-			ErrorCheck(errors.New("ERROR: Invalid data format"))
+			CheckError(errors.New("ERROR: Invalid data format"))
 		}
 	}
 
-	return dataEmplace, relationData
+	return roomInfo, relationData
 }
 
-// CoordoneMapRoom creates a map of rooms and their coordinates
-func CoordoneMapRoom(lignes []string) map[string][]int {
+// CreateRoomCoordinateMap creates a map of rooms and their coordinates
+func CreateRoomCoordinateMap(lines []string) map[string][]int {
 	roomMap := make(map[string][]int)
 	var startPoint, endPoint int
 	var startPointer, endPointer *int
 
-	for i, line := range lignes {
+	for i, line := range lines {
 		switch line {
 		case "##start":
 			startPoint = i + 1
@@ -64,20 +64,20 @@ func CoordoneMapRoom(lignes []string) map[string][]int {
 	}
 
 	if startPointer == nil || endPointer == nil {
-		ErrorCheck(errors.New("ERROR: Missing start or end room"))
+		CheckError(errors.New("ERROR: Missing start or end room"))
 		return nil
 	}
 
 	for i := startPoint; i <= endPoint; i++ {
-		if strings.HasPrefix(lignes[i], "##") {
+		if strings.HasPrefix(lines[i], "##") {
 			continue
 		}
-		room := strings.Fields(lignes[i])
+		room := strings.Fields(lines[i])
 		if len(room) == 3 {
 			coorX, err := strconv.Atoi(room[1])
-			ErrorCheck(err)
+			CheckError(err)
 			coorY, err := strconv.Atoi(room[2])
-			ErrorCheck(err)
+			CheckError(err)
 			position := 1
 			if i == startPoint {
 				position = 0
@@ -91,7 +91,7 @@ func CoordoneMapRoom(lignes []string) map[string][]int {
 	for key1, v1 := range roomMap {
 		for key2, v2 := range roomMap {
 			if key1 != key2 && v1[1] == v2[1] && v1[2] == v2[2] {
-				ErrorCheck(errors.New(key1 + " and " + key2 + " have the same coordinates"))
+				CheckError(errors.New(key1 + " and " + key2 + " have the same coordinates"))
 			}
 		}
 	}
@@ -99,66 +99,66 @@ func CoordoneMapRoom(lignes []string) map[string][]int {
 	return roomMap
 }
 
-// MapRoomConnections creates a map of connections between rooms
-func MapRoomConnections(dataBrute []string, coordoneMap map[string][]int) map[string][]string {
-	originalMap := make(map[string][]string)
+// CreateRoomConnectionsMap creates a map of connections between rooms
+func CreateRoomConnectionsMap(rawData []string, coordinateMap map[string][]int) map[string][]string {
+	connectionsMap := make(map[string][]string)
 
-	for key, v := range coordoneMap {
+	for key, v := range coordinateMap {
 		switch v[0] {
 		case 0:
-			originalMap[key] = append(originalMap[key], "start")
+			connectionsMap[key] = append(connectionsMap[key], "start")
 		case 2:
-			originalMap[key] = append(originalMap[key], "end")
+			connectionsMap[key] = append(connectionsMap[key], "end")
 		default:
-			originalMap[key] = append(originalMap[key], "middle")
+			connectionsMap[key] = append(connectionsMap[key], "middle")
 		}
 	}
 
-	for _, v := range dataBrute {
+	for _, v := range rawData {
 		connection := strings.Split(v, "-")
 		if len(connection) == 2 {
-			if _, ok := originalMap[connection[0]]; ok {
-				originalMap[connection[0]] = append(originalMap[connection[0]], connection[1])
+			if _, ok := connectionsMap[connection[0]]; ok {
+				connectionsMap[connection[0]] = append(connectionsMap[connection[0]], connection[1])
 			}
-			if _, ok := originalMap[connection[1]]; ok {
-				originalMap[connection[1]] = append(originalMap[connection[1]], connection[0])
+			if _, ok := connectionsMap[connection[1]]; ok {
+				connectionsMap[connection[1]] = append(connectionsMap[connection[1]], connection[0])
 			}
 		} else {
-			ErrorCheck(errors.New("ERROR: Invalid connection format"))
+			CheckError(errors.New("ERROR: Invalid connection format"))
 		}
 	}
 
-	return originalMap
+	return connectionsMap
 }
 
-// SupprSsissu removes dead-end paths
-func SupprSsissu(mapDepart map[string][]string) map[string][]string {
-	for key, value := range mapDepart {
+// RemoveDeadEnds removes dead-end paths
+func RemoveDeadEnds(initialMap map[string][]string) map[string][]string {
+	for key, value := range initialMap {
 		if len(value) == 1 && value[0] != "start" && value[0] != "end" {
-			delete(mapDepart, key)
+			delete(initialMap, key)
 		} else if len(value) == 2 && value[0] != "start" && value[0] != "end" {
-			for key1, values := range mapDepart {
+			for key1, values := range initialMap {
 				for i, v := range values {
 					if v == key {
-						mapDepart[key1] = Remove(values, i)
+						initialMap[key1] = RemoveElement(values, i)
 					}
 				}
 			}
-			delete(mapDepart, key)
-			return SupprSsissu(mapDepart)
+			delete(initialMap, key)
+			return RemoveDeadEnds(initialMap)
 		}
 	}
 
-	return mapDepart
+	return initialMap
 }
 
-// Remove removes a value from a slice of strings
-func Remove(slice []string, s int) []string {
+// RemoveElement removes a value from a slice of strings
+func RemoveElement(slice []string, s int) []string {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-// ErrorCheck prints an error message if err is not nil
-func ErrorCheck(e error) {
+// CheckError prints an error message if err is not nil
+func CheckError(e error) {
 	if e != nil {
 		fmt.Println("ERROR: Invalid data format")
 		log.Fatal(e)
