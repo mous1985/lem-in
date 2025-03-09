@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -16,19 +17,25 @@ func main() {
 	}
 
 	fileName := "./examples/" + os.Args[1]
-	input, err := os.ReadFile(fileName)
+	file, err := os.Open(fileName)
 	if err != nil {
 		fmt.Println("ERROR: Unable to read file:", err)
 		return
 	}
+	defer file.Close()
 
-	lines := strings.Split(strings.TrimSpace(string(input)), "\n")
 	var inputData []string
-	for _, line := range lines {
-		trimmedLine := strings.TrimSpace(line)
-		if trimmedLine != "" {
-			inputData = append(inputData, trimmedLine)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			inputData = append(inputData, line)
 		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("ERROR: Unable to read file:", err)
+		return
 	}
 
 	numAnts, roomData := functions.GetNumberOfAnts(inputData)
@@ -39,7 +46,7 @@ func main() {
 
 	path, distribution := graph.FindPaths(finalMap, numAnts)
 
-	fmt.Println(string(input) + "\n")
+	fmt.Println(strings.Join(inputData, "\n") + "\n")
 
 	ants := make([][]int, len(distribution))
 	antNumber := 1

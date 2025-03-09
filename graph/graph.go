@@ -1,5 +1,7 @@
 package graph
 
+import "sort"
+
 var (
 	AntsFarm = make(map[string][]string)
 	Paths    [][]string
@@ -10,39 +12,43 @@ var (
 func FindPaths(data map[string][]string, ants int) ([][]string, []int) {
 	AntsFarm = data
 
-	for start, options := range AntsFarm {
+	var start string
+	for room, options := range AntsFarm {
 		if options[0] == "start" {
-			findPossiblePaths([]string{start})
+			start = room
 			break
 		}
 	}
 
-	var paths [][]string
-	var distribution []int
+	findPossiblePaths([]string{start})
 
-	for end, options := range AntsFarm {
+	var end string
+	for room, options := range AntsFarm {
 		if options[0] == "end" {
-			paths, distribution = filterPaths(end, ants)
+			end = room
+			break
 		}
 	}
 
-	return paths, distribution
+	return filterPaths(end, ants)
 }
 
 // findPossiblePaths takes the AntsFarm and gives us all possible paths to the end.
 func findPossiblePaths(path []string) {
-	options := AntsFarm[path[len(path)-1]]
+	currentRoom := path[len(path)-1]
+	options := AntsFarm[currentRoom]
 
 	// if we are at the end, add the path to Paths
-	if options[0] == "end" {
+	if len(options) > 0 && options[0] == "end" {
 		Paths = append(Paths, path)
 		return
 	}
 
 	// try to find the room that we haven't visited yet
-	for _, option := range options[1:] {
-		if !contains(path, option) {
-			newPath := append(path, option)
+	for _, option := range options {
+		if option != "start" && !contains(path, option) {
+			newPath := append([]string(nil), path...)
+			newPath = append(newPath, option)
 			findPossiblePaths(newPath)
 		}
 	}
@@ -71,7 +77,7 @@ func filterPaths(endRoom string, ants int) ([][]string, []int) {
 
 	var bestPaths [][]string
 	var bestDistribution []int
-	var minMoves int
+	minMoves := int(^uint(0) >> 1) // Initialize to max int value
 
 	for _, shortPath := range Paths {
 		if len(shortPath) == 2 {
@@ -80,13 +86,9 @@ func filterPaths(endRoom string, ants int) ([][]string, []int) {
 
 		paths := structurePaths(shortPath[1:len(shortPath)-1], [][]string{shortPath}, Paths)
 		if allPathsEndAt(paths, endRoom) {
-			if minMoves == 0 {
-				bestPaths, bestDistribution, minMoves = calculateDistribution(paths, ants)
-			} else {
-				newPaths, newDistribution, newMoves := calculateDistribution(paths, ants)
-				if newMoves < minMoves {
-					bestPaths, bestDistribution, minMoves = newPaths, newDistribution, newMoves
-				}
+			newPaths, newDistribution, newMoves := calculateDistribution(paths, ants)
+			if newMoves < minMoves {
+				bestPaths, bestDistribution, minMoves = newPaths, newDistribution, newMoves
 			}
 		}
 	}
@@ -95,11 +97,9 @@ func filterPaths(endRoom string, ants int) ([][]string, []int) {
 }
 
 func sortPathsByLength(paths [][]string) {
-	for i := 1; i < len(paths); i++ {
-		for j := i; j > 0 && len(paths[j]) < len(paths[j-1]); j-- {
-			paths[j], paths[j-1] = paths[j-1], paths[j]
-		}
-	}
+	sort.Slice(paths, func(i, j int) bool {
+		return len(paths[i]) < len(paths[j])
+	})
 }
 
 func allPathsEndAt(paths [][]string, endRoom string) bool {
@@ -119,26 +119,30 @@ If no path contains a room that is also present in middle1,
 the path is added to paths and the rooms from middle2 are added to middle1.
 */
 func structurePaths(middle1 []string, paths [][]string, tempPaths [][]string) [][]string {
+	middleSet := make(map[string]struct{}, len(middle1))
+	for _, room := range middle1 {
+		middleSet[room] = struct{}{}
+	}
+
 	for _, long := range tempPaths {
 		middle2 := long[1 : len(long)-1]
+		contains := false
 
-		if !containsAny(middle1, middle2) {
-			paths = append(paths, long)
-			middle1 = append(middle1, middle2...)
+		for _, room := range middle2 {
+			if _, found := middleSet[room]; found {
+				contains = true
+				break
+			}
 		}
-	}
-	return paths
-}
 
-func containsAny(slice1, slice2 []string) bool {
-	for _, item1 := range slice1 {
-		for _, item2 := range slice2 {
-			if item1 == item2 {
-				return true
+		if !contains {
+			paths = append(paths, long)
+			for _, room := range middle2 {
+				middleSet[room] = struct{}{}
 			}
 		}
 	}
-	return false
+	return paths
 }
 
 // calculateDistribution calculates the optimal distribution of ants along different paths in the AntsFarm
@@ -152,21 +156,22 @@ func calculateDistribution(paths [][]string, ants int) ([][]string, []int, int) 
 		}
 	}
 
-	if antsArrived > ants {
-		return recount(paths, ants, antsArrived, distribution, moves)
-	} else if antsArrived == ants {
+	if antsArrived >= ants {
+		if antsArrived > ants {
+			return recount(paths, ants, antsArrived, distribution, moves)
+		}
 		return paths, distribution, moves
 	}
 
-	ants -= antsArrived
+	remainingAnts := ants - antsArrived
 
 	if len(distribution) == 1 {
-		distribution[0] += ants
-		moves += ants
+		distribution[0] += remainingAnts
+		moves += remainingAnts
 	} else {
-		for i := 0; ants > 0; i = (i + 1) % len(distribution) {
+		for i := 0; remainingAnts > 0; i = (i + 1) % len(distribution) {
 			distribution[i]++
-			ants--
+			remainingAnts--
 			if i == 0 {
 				moves++
 			}
@@ -185,19 +190,14 @@ func moveAnts(paths [][]string) (int, []int) {
 		return 1, []int{1}
 	}
 
-	var distribution []int
-	var antsArrived int
+	distribution := make([]int, len(paths))
+	antsArrived := 0
 	longestPath := len(paths[len(paths)-1])
 
-	for _, path := range paths {
-		if len(path) > longestPath {
-			longestPath = len(path)
-		}
-	}
-
-	for _, path := range paths {
-		antsArrived += longestPath - len(path) + 1
-		distribution = append(distribution, longestPath-len(path)+1)
+	for i, path := range paths {
+		antsOnPath := longestPath - len(path) + 1
+		antsArrived += antsOnPath
+		distribution[i] = antsOnPath
 	}
 
 	return antsArrived, distribution
